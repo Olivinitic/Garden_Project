@@ -6,6 +6,9 @@
 *   Description:  This program monitors and controls the parameters of a garden space. 
 *                 All inputs and outputs are modular by design and can be selected as desired.
 *   
+*   AIO Username:   oligon
+*   AIO Key:        9b9ec3768ccd4ebf83a67d2223e6e2b8
+*   
 *   Hardware Hook Up:
 *     - Indicator LED
 *       -- Digital Pin 2 -> 1k Resistor -> LED -> GND (Series)

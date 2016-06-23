@@ -68,14 +68,15 @@ void setup() {
   display.setCursor(0,0);
   display.display(); // actually display all of the above
 
-  delay(3000);        // Wait 3 seconds before refreshing
+  delay(5000);        // Wait 5 seconds before refreshing
 
+  // Clear the text
   display.clearDisplay();
+  display.display();
   
   display.setFont(&FreeSerifItalic24pt7b);
-  display.setTextColor(WHITE);
   display.setCursor(0,31);
-  display.print("Olitron\n");
+  display.print("Oligon\n");
   display.display();
 }
 

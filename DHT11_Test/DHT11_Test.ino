@@ -1,6 +1,6 @@
 /*******************************************************************
 *  Sensor:       DHT11 Humidity/Temperature Sensor
-*  Author:       Arduino
+*  Author:       Adafruit
 *  Contributer:  Oliver
 *  Description:  This is an example sketch that tests the humidity/temp sensor.
 *
@@ -33,7 +33,7 @@
 DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("DHTxx test!");
 
   dht.begin();

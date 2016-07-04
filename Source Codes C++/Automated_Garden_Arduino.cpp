@@ -298,16 +298,17 @@
   // Water Solenoid Valve Definition
   int solenoidPin = 2;       // Digital Pin 2 on Arduino that controls the Transistor
 
-
   // Water Flow Sensor Definitions
-  int flowPin = 2;    //This is the input pin on the Arduino
-  double flowRate;    //This is the value we intend to calculate. 
-  volatile int count; //This integer needs to be set as volatile to ensure it updates correctly during the interrupt process.  
+  //#define FLOWSENSORPIN 7  // Digital Pin 7 <-- Flow Sensor
+  int flowPin = 7;           // Digital Pin 7 <-- Flow Sensor
+  double flowRate;           // This is the value we intend to calculate
+  volatile int count;        // This integer needs to be set as volatile to ensure that it updates correctly during the interrupt process
 
-  /*
-  #define FLOWSENSORPIN 7  // Digital Pin 7 <-- Flow Sensor
-  
-  // count how many pulses!
+  void Flow()
+{
+   count++; //Every time this function is called, increment "count" by 1
+}
+  /*// count how many pulses!
   volatile uint16_t pulses = 0;
   // track the state of the pulse pin
   volatile uint8_t lastflowpinstate;
@@ -318,7 +319,7 @@
   // Interrupt is called once a millisecond, looks for any pulses from the sensor!
   SIGNAL(TIMER0_COMPA_vect) {
     uint8_t x = digitalRead(FLOWSENSORPIN);
-    
+   
     if (x == lastflowpinstate) {
       lastflowratetimer++;
       return; // nothing changed!
@@ -332,8 +333,8 @@
     flowrate = 1000.0;
     flowrate /= lastflowratetimer;  // in hertz
     lastflowratetimer = 0;
+    
   }
-
   
 // Create useInterrupt function tool for Water Flow Sensor
 void useInterrupt(boolean v) {
@@ -349,15 +350,10 @@ void useInterrupt(boolean v) {
 }
 */
 
-void Flow()
-{
-   count++; //Every time this function is called, increment "count" by 1
-}
-
 void setup(void)
   {
     while (!Serial);          // required for Flora & Micro
-    //delay(2000);               // Wait 0.5 sec before checking again
+    delay(500);               // Wait 0.5 sec before checking again
   
     Serial.begin(115200);     // Set the Baud Rate
     
@@ -366,9 +362,9 @@ void setup(void)
     Serial.println(F(""));
 
     // Print the Data String Format referance
-    Serial.println("Moisture,Light,WaterValve,WaterUsed,REDIndicator,GRNIndicator,Humidity,Temperature,HeatIndex,");
-    Serial.println("--------------------------------------------------------------------------------------------");
-    //delay(500);               // wait for display to boot up
+    Serial.println("Moisture,Light,Humidity,Temperature,HeatIndex,WaterValve,WaterUsed,REDIndicator,GRNIndicator");
+    Serial.println("--------------------------------------------");
+    delay(500);               // wait for display to boot up
   
     // Soil Moisture setup
     pinMode(soilMoistureControl, OUTPUT);           // Sets Digital 4 pin as Output
@@ -383,18 +379,15 @@ void setup(void)
     pinMode(solenoidPin, OUTPUT);                   // Sets Digital 2 pin as output
     
     // Water Flow Sensor setup
-    pinMode(flowPin, INPUT);           //Sets the pin as an input
-    attachInterrupt(0, Flow, RISING);  //Configures interrupt 0 (pin 2 on the Arduino Uno) to run the function "Flow"  
-
     /*
     pinMode(FLOWSENSORPIN, INPUT);                  // Define digital pin 7 as input
     digitalWrite(FLOWSENSORPIN, HIGH);              // Set digital pin 7 to high
     lastflowpinstate = digitalRead(FLOWSENSORPIN);  // Set the read digital value to lastflowpinstate
     useInterrupt(true);
     */
+    pinMode(flowPin, INPUT);           //Sets the pin as an input
+    attachInterrupt(0, Flow, RISING);  //Configures interrupt 0 (pin 2 on the Arduino Uno) to run the function "Flow"  
 
-    // LED Indicator setup
-    pinMode(GRNpin, OUTPUT);              // Sets Digital 11 pin as Output
   
   }
   
@@ -408,46 +401,7 @@ void loop(void)
     // Reading # and Timestamp loop
     /////////////////////////////////////////////////////////////////////
     // Add the reading # and timestamp to each reading measured
-    Serial.println("--------------------------------------------------------------------------------------------");
-
-    
-    /////////////////////////////////////////////////////////////////////
-    // DHT11 Humidity and Temperature loop
-    /////////////////////////////////////////////////////////////////////
-    // Reading temperature or humidity takes about 250 milliseconds!
-    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-    float h = dht.readHumidity();
-    // Read temperature as Celsius (the default)
-    float t = dht.readTemperature();
-    // Read temperature as Fahrenheit (isFahrenheit = true)
-    float f = dht.readTemperature(true);
-
-    // Check if any reads failed and exit early (to try again).
-    if (isnan(h) || isnan(t) || isnan(f)) {
-      Serial.println("Failed to read from DHT sensor!");
-      return;
-    }
   
-    // Compute heat index in Fahrenheit (the default)
-    float hif = dht.computeHeatIndex(f, h);
-    // Compute heat index in Celsius (isFahreheit = false)
-    float hic = dht.computeHeatIndex(t, h, false);
-    
-    // Print Humidity/Temp Info
-    Serial.print("Humidity: \t\t");
-    Serial.print(h);
-    Serial.println(" %");           // Humidity Units
-    Serial.print("Temperature: \t\t");
-    Serial.print(t);
-    Serial.print(" *C \t");           // Temperature Units
-    Serial.print(f);
-    Serial.println(" *F");            // Temperature Units
-    Serial.print("Heat index: \t\t");
-    Serial.print(hic);              // Heat Index Units
-    Serial.print(" *C \t");
-    Serial.print(hif);
-    Serial.println(" *F");          // Heat Index Units
-
     /////////////////////////////////////////////////////////////////////
     // Soil Moisture Sensor loop
     /////////////////////////////////////////////////////////////////////
@@ -457,10 +411,11 @@ void loop(void)
     delay(1000);                                        // Wait for Sensor to charge
     soilMoistureReading = analogRead(soilMoisturePin);  // Take Sensor Reading
     digitalWrite(soilMoistureControl, LOW);             // Switch Sensor Off
-    
+
     // Print the Soil Moisture Level info.
-    Serial.print("Soil Moisture Level: \t");
-    Serial.println(soilMoistureReading);
+    Serial.print("Soil Moisture Level: ");
+    Serial.print(soilMoistureReading);
+    Serial.print("\t");
     
     /////////////////////////////////////////////////////////////////////
     // Photocell Light Intensity loop
@@ -468,10 +423,10 @@ void loop(void)
     digitalWrite(photocellControl, HIGH);           // Switch Sensor On
     delay(1000);                                    // Wait for Sensor to charge
     photocellReading = analogRead(photocellPin);    // Take Sensor Reading
-    //digitalWrite(photocellControl, LOW);            // Switch Sensor Off
+    digitalWrite(photocellControl, LOW);            // Switch Sensor Off
    
     // Print the raw analog light intensity value
-    Serial.print("Analog light reading: \t");
+    Serial.print("| Analog light reading: ");
     Serial.print(photocellReading);                 // Print the raw analog reading
     // We'll have a few threshholds, qualitatively determined
     if (photocellReading < 10) {
@@ -485,17 +440,53 @@ void loop(void)
     } else {
       Serial.println(" - Very bright");
     }
+    Serial.println("\t| ");
+
+   
+    /////////////////////////////////////////////////////////////////////
+    // DHT11 Humidity and Temperature loop
+    /////////////////////////////////////////////////////////////////////
+    // Reading temperature or humidity takes about 250 milliseconds!
+    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+    float h = dht.readHumidity();
+    // Read temperature as Celsius (the default)
+    float t = dht.readTemperature();
+    // Read temperature as Fahrenheit (isFahrenheit = true)
+    float f = dht.readTemperature(true);
+  
+    // Check if any reads failed and exit early (to try again).
+    if (isnan(h) || isnan(t) || isnan(f)) {
+      Serial.println("Failed to read from DHT sensor!");
+      return;
+    }
+  
+    // Compute heat index in Fahrenheit (the default)
+    float hif = dht.computeHeatIndex(f, h);
+    // Compute heat index in Celsius (isFahreheit = false)
+    float hic = dht.computeHeatIndex(t, h, false);
+    
+    // Print Humidity/Temp Info
+    Serial.print("Humidity: ");
+    Serial.print(h);
+    Serial.print(" %\t");
+    Serial.print("| Temperature: ");
+    Serial.print(t);
+    Serial.print(" *C ");
+    Serial.print(f);
+    Serial.print(" *F");
+    Serial.print("| Heat index: ");
+    Serial.print(hic);
+    Serial.print(" *C ");
+    Serial.print(hif);
+    Serial.println(" *F");
     
     /////////////////////////////////////////////////////////////////////
     // Water Solenoid Valve loop
     /////////////////////////////////////////////////////////////////////
     digitalWrite(solenoidPin, HIGH);    //Switch Solenoid ON
     delay(1000);                        //Wait 1 Second
-    Serial.println("Valve: \t\t\tOpen");
-    
     digitalWrite(solenoidPin, LOW);     //Switch Solenoid OFF
     delay(1000);                        //Wait 1 Second
-    Serial.println("Valve: \t\t\tClose");
 
     /////////////////////////////////////////////////////////////////////
     // Water Flow sensor loop
@@ -510,9 +501,8 @@ void loop(void)
     flowRate = flowRate * 60;         //Convert seconds to minutes, giving you mL / Minute
     flowRate = flowRate / 1000;       //Convert mL to Liters, giving you Liters / Minute
 
-    Serial.print("Flow Rate: \t\t");
     Serial.println(flowRate);         //Print the variable flowRate to Serial
-    delay(1000);
+  
     /*
     // Print Water Flow sensor info
     Serial.print("Freq: "); Serial.print(flowrate); Serial.print(" \t\t");
@@ -536,22 +526,14 @@ void loop(void)
     /////////////////////////////////////////////////////////////////////
     // Red LED Indicator
     REDbrightness = map(photocellReading, 0, 1023, 0, 255);
-    Serial.print("Red LED Brightness: \t");
-    Serial.println(REDbrightness);
     analogWrite(REDpin,REDbrightness);
-    Serial.println("Red LED:      Check");
-    delay(1000);
-    
+
     // Green LED Indicator
     digitalWrite(GRNpin, HIGH);       // Turn Green LED On
-    Serial.println("Green LED:    On");
-    delay(100000);
-    
+    delay(1000);
     digitalWrite(GRNpin, LOW);        // Turn Green LED Off
-    Serial.println("Green LED:    Off");    
-    delay(10000);
+    delay(1000);
 
-    
     /*// Control the brightness of an LED in response to photocell
     // LED gets brighter the darker it is at the sensor
     // that means we have to -invert- the reading from 0-1023 back to 1023-0
@@ -560,7 +542,10 @@ void loop(void)
     LEDbrightness = map(photocellReading, 0, 1023, 0, 255);
     analogWrite(LEDpin, LEDbrightness);
     */
+
+    Serial.print("--------------------------------------------\ln");
   }
+  
 /**************************************************************************/
 /*!
     @brief  Checks for user input (via the Serial Monitor)
@@ -584,3 +569,5 @@ void getUserInput(char buffer[], uint8_t maxSize)
 
 
 }
+
+

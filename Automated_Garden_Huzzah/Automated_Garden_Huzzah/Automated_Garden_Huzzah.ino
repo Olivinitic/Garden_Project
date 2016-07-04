@@ -480,17 +480,19 @@ void loop(void)
     // Grab the current state of the sensor
     int humidity_data = (int)dht.readHumidity();
     int temperature_data = (int)dht.readTemperature();
-=
+
     // Publish data
     if (! temperature.publish(temperature_data))
       Serial.println(F("Failed to publish temperature"));
     else
       Serial.println(F("Temperature published!"));
+      Serial.println(F(temperature_data));
 
     if (! humidity.publish(humidity_data))
       Serial.println(F("Failed to publish humidity"));
     else
       Serial.println(F("Humidity published!"));
+      Serial.println(F(humidity_data));
 
     // Repeat every 10 seconds
     delay(10000);
@@ -518,12 +520,12 @@ void loop(void)
       Serial.println("Failed to read from DHT sensor!");
       return;
     }
-  */
+
     // Compute heat index in Fahrenheit (the default)
     float hif = dht.computeHeatIndex(f, h);
     // Compute heat index in Celsius (isFahreheit = false)
     float hic = dht.computeHeatIndex(t, h, false);
-    
+ 
     // Print Humidity/Temp Info
     Serial.print("Humidity: \t\t");
     Serial.print(h);
@@ -538,7 +540,7 @@ void loop(void)
     Serial.print(" *C \t");
     Serial.print(hif);
     Serial.println(" *F");          // Heat Index Units
-/*
+    
     /////////////////////////////////////////////////////////////////////
     // Soil Moisture Sensor loop
     /////////////////////////////////////////////////////////////////////
